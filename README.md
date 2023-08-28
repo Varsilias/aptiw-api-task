@@ -14,3 +14,5 @@ _NB:_ You can also run the database and its explorer in detached mode by running
 6. Start the development server by running the command `php artisan serve`
 
 7. Visit `http://localhost:8000/graphiql` to test out the graphql **Mutation** and **Queries**
+
+Live URL: https://aptiw-task-backend-cd33552adaac.herokuapp.com/graphiql
