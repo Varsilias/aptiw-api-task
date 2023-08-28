@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string("title");
             $table->text("description");
             $table->dateTime("due_date");
-            $table->enum("status", ["Not Started", "In Progress", "Completed"])->default("Not Started");
+            $table->enum("status", ["NOT_STARTED", "IN_PROGRESS", "COMPLETED"])->default("NOT_STARTED");
             $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });

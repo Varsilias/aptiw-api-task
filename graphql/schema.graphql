@@ -1,0 +1,124 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime
+    @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+"Indicates what fields are available at the top level of a query operation." # "Account of a person who utilizes this application."
+type User {
+    "Unique primary key."
+    id: ID!
+
+    "Non-unique name."
+    name: String!
+
+    "Unique email address."
+    email: String!
+
+    "When the email was verified."
+    email_verified_at: DateTime
+
+    "When the account was created."
+    created_at: DateTime!
+
+    "When the account was last updated."
+    updated_at: DateTime!
+
+    tasks: [Task] @hasMany
+}
+
+enum TaskStatus {
+    NOT_STARTED @enum(value: "NOT_STARTED")
+    IN_PROGRESS @enum(value: "IN_PROGRESS")
+    COMPLETED @enum(value: "COMPLETED")
+}
+
+"Task"
+type Task {
+    "Unique primary key."
+    id: ID!
+
+    "Task title."
+    title: String!
+
+    "Task Description."
+    description: String!
+
+    "The Due Date of the task"
+    due_date: DateTime!
+
+    "The status of the task"
+    status: TaskStatus!
+
+    "The user who this task belongs to"
+    user: User! @belongsTo
+
+    "When the task was created."
+    created_at: DateTime!
+
+    "When the task was last updated."
+    updated_at: DateTime!
+}
+
+type LoginResponsePayload {
+    access_token: String!
+    user: User!
+}
+
+type Query {
+    me: User @auth(guards: ["sanctum"])
+
+    task(id: ID @eq @rules(apply: ["required"])): Task
+        @find
+        @guard
+        @whereAuth(relation: "user")
+
+    searchTask(search: String! @search): [Task!]!
+        @guard
+        @whereAuth(relation: "user")
+
+    tasks: [Task]! @all @whereAuth(relation: "user") @guard
+}
+
+type Mutation {
+    signUp(
+        name: String!
+            @rules(
+                apply: ["required", "min:4"]
+                message: "Please provide a valid input"
+            )
+        email: String!
+            @rules(
+                apply: ["email", "unique:users"]
+                messsage: "Email is not valid or is already in use"
+            )
+        password: String!
+            @rules(
+                apply: ["min:8"]
+                message: "Password must not be less than 8 characters"
+            )
+            @hash
+    ): User! @create
+
+    login(
+        email: String! @rules(apply: ["email"])
+        password: String! @rules(apply: ["min:8"])
+    ): LoginResponsePayload!
+
+    logout: User @guard
+
+    createTask(
+        title: String! @rules(apply: ["required", "min:4"])
+        description: String! @rules(apply: ["required", "max:255"])
+        due_date: DateTime! @rules(apply: ["required", "date", "after:now"])
+        status: TaskStatus
+    ): Task @guard
+
+    updateTask(
+        id: ID! @rules(apply: ["required"])
+        title: String
+        description: String
+        due_date: DateTime
+        status: TaskStatus
+    ): Task @update @guard
+
+    deleteTask(id: ID! @eq @rules(apply: ["required"])): Task @delete @guard
+}
